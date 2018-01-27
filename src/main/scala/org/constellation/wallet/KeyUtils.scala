@@ -32,17 +32,24 @@ import org.json4s.native.Serialization
   */
 object KeyUtils {
 
+  val ECDSAKeyPairInstance = "ECDsA"
+
+  val SECP256k1ParamSpec = "secp256k1"
+
+  val SpongyCastleProviderCode = "SC"
+
   /**
     * Simple Bitcoin like wallet grabbed from some stackoverflow post
     * Mostly for testing purposes, feel free to improve.
     * Source: https://stackoverflow.com/questions/29778852/how-to-create-ecdsa-keypair-256bit-for-bitcoin-curve-secp256k1-using-spongy
+    *
     * @return : Private / Public keys following BTC implementation
     */
   def makeKeyPair(): KeyPair = {
     import java.security.Security
     Security.insertProviderAt(new org.spongycastle.jce.provider.BouncyCastleProvider(), 1)
-    val keyGen: KeyPairGenerator = KeyPairGenerator.getInstance("ECDsA", "SC")
-    val ecSpec = new ECGenParameterSpec("secp256k1")
+    val keyGen: KeyPairGenerator = KeyPairGenerator.getInstance(ECDSAKeyPairInstance, SpongyCastleProviderCode)
+    val ecSpec = new ECGenParameterSpec(SECP256k1ParamSpec)
     keyGen.initialize(ecSpec, new SecureRandom())
     keyGen.generateKeyPair
   }
@@ -74,7 +81,7 @@ object KeyUtils {
                 bytes: Array[Byte],
                 signFunc: String = DefaultSignFunc
               )(implicit privKey: PrivateKey): Array[Byte] = {
-    val signature = Signature.getInstance(signFunc, "SC")
+    val signature = Signature.getInstance(signFunc, SpongyCastleProviderCode)
     signature.initSign(privKey)
     signature.update(bytes)
     val signedOutput = signature.sign()
@@ -110,7 +117,7 @@ object KeyUtils {
                        signedOutput: Array[Byte],
                        signFunc: String = DefaultSignFunc
                      )(implicit pubKey: PublicKey): Boolean = {
-    val verifyingSignature = Signature.getInstance(signFunc, "SC")
+    val verifyingSignature = Signature.getInstance(signFunc, SpongyCastleProviderCode)
     verifyingSignature.initVerify(pubKey)
     verifyingSignature.update(originalInput)
     val result = verifyingSignature.verify(signedOutput)
@@ -121,14 +128,14 @@ object KeyUtils {
   def bytesToPublicKey(encodedBytes: Array[Byte]): PublicKey = {
     val spec = new X509EncodedKeySpec(encodedBytes)
     import java.security.KeyFactory
-    val kf = KeyFactory.getInstance("ECDsA", "SC")
+    val kf = KeyFactory.getInstance(ECDSAKeyPairInstance, SpongyCastleProviderCode)
     kf.generatePublic(spec)
   }
 
   def bytesToPrivateKey(encodedBytes: Array[Byte]): PrivateKey = {
     val spec = new PKCS8EncodedKeySpec(encodedBytes)
     import java.security.KeyFactory
-    val kf = KeyFactory.getInstance("ECDsA", "SC")
+    val kf = KeyFactory.getInstance(ECDSAKeyPairInstance, SpongyCastleProviderCode)
     kf.generatePrivate(spec)
   }
 
