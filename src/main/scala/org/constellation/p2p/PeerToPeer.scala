@@ -8,6 +8,7 @@ import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import org.constellation.actor.Receiver
 import org.constellation.p2p.PeerToPeer._
+import org.constellation.tx.AtomicTransaction.DoubleEntrySignedTransaction
 
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
@@ -82,7 +83,6 @@ trait PeerToPeer {
     case Terminated(actorRef) =>
       logger.debug(s"Peer ${actorRef} has terminated. Removing it from the list.")
       peers -= actorRef
-
   }
 
 }

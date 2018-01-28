@@ -1,13 +1,19 @@
 package org.constellation.tx
 
 import java.nio.ByteBuffer
-import java.security.PublicKey
+import java.security.{PrivateKey, PublicKey}
 
 import org.constellation.wallet.KeyUtils
 import org.constellation.wallet.KeyUtils.{base64, bytesToPublicKey, fromBase64}
 import org.json4s.native.Serialization
 
 object AtomicTransaction {
+
+  case class TransactionRPCRequest(
+                                    sourceAddress: String,
+                                    destinationAddress: String,
+                                    quantity: Long
+                                  )
 
   def bytesToLong(bytes: Array[Byte]): Long = {
     val buffer = ByteBuffer.allocate(8)
@@ -22,6 +28,23 @@ object AtomicTransaction {
     buffer.array()
   }
 
+  case class DoubleEntryOriginBroadcast(tx2: DoubleEntrySignedTransaction)
+
+  case class DoubleEntrySignedTransaction(
+                                           debit: SignedTransaction,
+                                           credit: SignedTransaction
+                                         ) {
+    def verified: Boolean = debit.verified && credit.verified
+  }
+
+  case class SignedTransaction(
+                                transactionInputData: TransactionInputData,
+                                signedOutput: Array[Byte]
+                              ) {
+    def verified: Boolean = {
+      KeyUtils.verifySignature(transactionInputData.bytes, signedOutput)
+    }
+  }
 
   // TODO: Change these to use json4s custom serializers.
   // Working on this now in the wallet class
@@ -38,7 +61,19 @@ object AtomicTransaction {
       destinationAddress,
       base64(longToBytes(quantity))
     )
+
+    def bytes: Array[Byte] = encode.rendered.getBytes
+
     def sourceAddress: String = KeyUtils.publicKeyToAddress(sourcePubKey)
+
+    def toSigned(privateKey: PrivateKey): DoubleEntrySignedTransaction = {
+      val debit = SignedTransaction(this, KeyUtils.signData(bytes)(privateKey))
+      val creditInput = this.copy(destinationAddress = sourceAddress, quantity = -1*quantity.toLong)
+      val credit = SignedTransaction(creditInput,
+        KeyUtils.signData(creditInput.bytes)(privateKey)
+      )
+      DoubleEntrySignedTransaction(debit, credit)
+    }
 
   }
 

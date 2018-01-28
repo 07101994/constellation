@@ -14,6 +14,8 @@ case class Wallet(keyPairs: Seq[KeyPair])
 
 object Wallet {
 
+  val emptyWallet = Wallet(Seq())
+
   implicit val walletFormats: Formats = DefaultFormats +
     new PublicKeySerializer + new PrivateKeySerializer + new KeyPairSerializer
 

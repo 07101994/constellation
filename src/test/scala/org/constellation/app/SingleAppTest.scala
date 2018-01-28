@@ -13,7 +13,7 @@ class SingleAppTest extends  FlatSpec with BeforeAndAfterAll {
   }
 
   override def afterAll() {
-    BlockChainApp.system.terminate()
+    BlockChainApp.terminate()
   }
 
 

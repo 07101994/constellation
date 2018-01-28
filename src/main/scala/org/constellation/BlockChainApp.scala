@@ -38,4 +38,6 @@ object BlockChainApp extends App {
 
   val appNode = new AppNode(id, seedHost, httpInterface, httpPort, timeout)
 
+  def terminate() = system.terminate()
+
 }
