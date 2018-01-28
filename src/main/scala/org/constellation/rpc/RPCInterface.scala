@@ -14,10 +14,12 @@ import ChainInterface.{QueryAll, QueryLatest, ResponseBlock, ResponseBlockChain}
 import akka.http.scaladsl.server.Route
 import org.constellation.blockchain.Consensus.MineBlock
 import org.constellation.p2p.PeerToPeer._
+import org.constellation.wallet.{KeyUtils, Wallet}
 import org.json4s.native.Serialization
 import org.json4s.{DefaultFormats, Formats, native}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 trait RPCInterface extends Json4sSupport {
 
@@ -33,7 +35,32 @@ trait RPCInterface extends Json4sSupport {
 
   implicit val timeout: Timeout = Timeout(5, TimeUnit.SECONDS)
 
+  var wallet : Option[Wallet] = None
+
   val routes: Route =
+    path("wallet") {
+      path("create" / IntNumber) { numKeyPairs =>
+        wallet = Some(Wallet.create(numKeyPairs))
+        complete(s"" +
+          s"Created wallet by generating new keys with $numKeyPairs total key pairs using " +
+          s"${KeyUtils.ECDSAKeyPairInstance} instance with ${KeyUtils.SECP256k1ParamSpec} spec " +
+          s"and ${KeyUtils.SpongyCastleProviderCode} provider. " +
+          s"Wallet is loaded in memory now but not saved anywhere.")
+      } ~
+      path("save") {
+        parameter('path.?) { savePathOpt =>
+          val response = wallet match {
+            case Some(w) =>
+              Try{Wallet.save(w, savePathOpt)}.toOption.map{ _ =>
+                "Saved wallet"
+              }.getOrElse("Failed to save wallet")
+            case None =>
+              "Cannot save wallet, none loaded in memory"
+          }
+          complete(response)
+        }
+      }
+    }~
     get {
       path("blocks") {
         val chain: Future[Seq[Block]] = (blockChainActor ? QueryAll).map {
