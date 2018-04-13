@@ -61,4 +61,9 @@ workflows:
   build-publish:
     jobs:
       - build
-      - publish
+      - publish:
+          requires:
+            - build
+          filters:
+            branches:
+              only: rg-udp-ci
