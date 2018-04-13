@@ -10,6 +10,8 @@ import akka.util.Timeout
 import org.json4s.native.Serialization
 import org.scalatest._
 
+import scala.util.Random
+
 case class TestMessage(a: String, b: Int)
 
 class TestReceiveUDP extends Actor {
@@ -41,8 +43,12 @@ class UDPTest extends TestKit(ActorSystem("UDP")) with FlatSpecLike
 
     val rx1 = system.actorOf(Props(new TestReceiveUDP), s"rx1")
     val rx2 = system.actorOf(Props(new TestReceiveUDP), s"rx2")
-    val listener1 = system.actorOf(Props(new UDPActor(Some(rx1), 16180)), s"listener1")
-    val listener2 = system.actorOf(Props(new UDPActor(Some(rx2), 16181)), s"listener2")
+
+    val port1 = Random.nextInt(40000) + 5000
+    val port2 = Random.nextInt(40000) + 5000
+
+    val listener1 = system.actorOf(Props(new UDPActor(Some(rx1), port1)), s"listener1")
+    val listener2 = system.actorOf(Props(new UDPActor(Some(rx2), port2)), s"listener2")
 
     Thread.sleep(100)
 
@@ -50,8 +56,8 @@ class UDPTest extends TestKit(ActorSystem("UDP")) with FlatSpecLike
 
     val data = TestMessage("a", 1)
 
-    listener1.udpSend(data, new InetSocketAddress("localhost", 16181))
-    listener2.udpSend(data, new InetSocketAddress("localhost", 16180))
+    listener1.udpSend(data, new InetSocketAddress("localhost", port2))
+    listener2.udpSend(data, new InetSocketAddress("localhost", port1))
     Thread.sleep(100)
     import akka.pattern.ask
 
