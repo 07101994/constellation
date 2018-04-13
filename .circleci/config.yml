@@ -41,9 +41,9 @@ jobs:
       # run tests!
       - run: cat /dev/null | sbt test:test
   publish:
-    docker:
+ #   docker:
       # specify the version you desire here
-      - image: circleci/openjdk:8-jdk
+   #   - image: circleci/openjdk:8-jdk
 
     working_directory: ~/constellation
 
