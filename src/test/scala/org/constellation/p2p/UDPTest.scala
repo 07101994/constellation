@@ -58,7 +58,7 @@ class UDPTest extends TestKit(ActorSystem("UDP")) with FlatSpecLike
 
     listener1.udpSend(data, new InetSocketAddress("localhost", port2))
     listener2.udpSend(data, new InetSocketAddress("localhost", port1))
-    Thread.sleep(100)
+    Thread.sleep(200)
     import akka.pattern.ask
 
     assert((rx1 ? "done?").mapTo[Boolean].get())
