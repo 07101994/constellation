@@ -39,6 +39,7 @@ jobs:
           key: v1-dependencies--{{ checksum "build.sbt" }}
         
       # run tests!
+      # Can sbt docker:publish work in here?
       - run: cat /dev/null | sbt test:test
   publish:
     machine:
