@@ -39,19 +39,28 @@ jobs:
           key: v1-dependencies--{{ checksum "build.sbt" }}
         
       # run tests!
-      # Can sbt docker:publish work in here?
-    #  - run: cat /dev/null | sbt test:test
-      - run: sbt docker:publishLocal
+      - run: cat /dev/null | sbt test:test
 
   publish:
     machine:
       docker_layer_caching: true
+      services:
+        - docker
+
     working_directory: ~/constellation
 
     # For gcloud https://circleci.com/docs/1.0/google-cloud-platform/
     pre:
       - pyenv global 2.7.12
-
+      - sudo /opt/google-cloud-sdk/bin/gcloud --quiet components update
+      - sudo /opt/google-cloud-sdk/bin/gcloud --quiet components update kubectl
+      - echo $GCLOUD_SERVICE_KEY > ${HOME}/account-auth.json
+      - sudo /opt/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file ${HOME}/account-auth.json
+      - sudo /opt/google-cloud-sdk/bin/gcloud config set project $GOOGLE_PROJECT_ID
+      - sudo /opt/google-cloud-sdk/bin/gcloud --quiet config set container/cluster $GOOGLE_CLUSTER_NAME
+      # Reading the zone from the env var is not working so we set it here
+      - sudo /opt/google-cloud-sdk/bin/gcloud config set compute/zone ${GOOGLE_COMPUTE_ZONE}
+      - sudo /opt/google-cloud-sdk/bin/gcloud --quiet container clusters get-credentials $GOOGLE_CLUSTER_NAME
     environment:
       # Customize the JVM maximum heap limit
       JVM_OPTS: -Xmx3200m
@@ -63,20 +72,27 @@ jobs:
     steps:
       - checkout
 
-  #    - run:
-   #       command: sbt docker:publishLocal
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "build.sbt" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      - run:
+          command: sbt docker:publishLocal
 
 workflows:
   version: 2
   build:
     jobs:
       - build
- # publish:
-  #  jobs:
+  publish:
+    jobs:
   #    - build
-   #   - publish:
+      - publish:
    #       requires:
    #         - build
-        #  filters:
-         #   branches:
-         #     only: rg-udp-ci
+          filters:
+            branches:
+              only: rg-udp-ci
