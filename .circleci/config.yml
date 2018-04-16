@@ -40,10 +40,14 @@ jobs:
         
       # run tests!
       - run: cat /dev/null | sbt test:test
-  publish:
+  publish-local:
     machine:
       docker_layer_caching: true
     working_directory: ~/constellation
+
+    # For gcloud https://circleci.com/docs/1.0/google-cloud-platform/
+    pre:
+      - pyenv global 2.7.12
 
     environment:
       # Customize the JVM maximum heap limit
@@ -53,6 +57,7 @@ jobs:
 
     steps:
       - checkout
+      - run: echo "git hash: "$(git rev-parse HEAD)
       - run:
           command: sbt docker:publishLocal
 
@@ -61,7 +66,7 @@ workflows:
   build:
     jobs:
       - build
-  publish:
+  publish-local:
     jobs:
   #    - build
       - publish:
