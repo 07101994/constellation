@@ -69,5 +69,9 @@ dockerCommands :=
 
 dockerUsername := Some("constellationlabs")
 
+dockerAlias := DockerAlias(None, Some("constellationlabs"), "constellation",
+  Some(sys.env.getOrElse("SHORT_GIT_HASH", version.toString))
+)
+
 // Update the latest tag when publishing
 dockerUpdateLatest := true

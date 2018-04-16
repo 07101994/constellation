@@ -54,14 +54,13 @@ jobs:
       JVM_OPTS: -Xmx3200m
       TERM: dumb
       IMAGE_REPO: constellationlabs
+      SHORT_GIT_HASH: $(echo $CIRCLE_SHA1 | cut -c -7)
 
     steps:
       - checkout
-     # - run:
-    #      command: echo "git hash: "$(git rev-parse HEAD)
 
-    #  - run:
-    #      command: sbt docker:publishLocal
+      - run:
+          command: sbt docker:publishLocal
 
 workflows:
   version: 2
