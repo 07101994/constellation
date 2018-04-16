@@ -60,14 +60,14 @@ jobs:
      # - run:
     #      command: echo "git hash: "$(git rev-parse HEAD)
 
-      - run:
-          command: sbt docker:publishLocal
+    #  - run:
+    #      command: sbt docker:publishLocal
 
 workflows:
   version: 2
-  build:
-    jobs:
-      - build
+ # build:
+ #   jobs:
+  #    - build
   publish:
     jobs:
   #    - build
