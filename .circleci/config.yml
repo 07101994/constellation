@@ -68,15 +68,7 @@ jobs:
     # For gcloud https://circleci.com/docs/1.0/google-cloud-platform/
     pre:
       - pyenv global 2.7.12
-      - sudo /opt/google-cloud-sdk/bin/gcloud --quiet components update
-      - sudo /opt/google-cloud-sdk/bin/gcloud --quiet components update kubectl
-      - echo $GCLOUD_SERVICE_KEY > ${HOME}/account-auth.json
-      - sudo /opt/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file ${HOME}/account-auth.json
-      - sudo /opt/google-cloud-sdk/bin/gcloud config set project $GOOGLE_PROJECT_ID
-      - sudo /opt/google-cloud-sdk/bin/gcloud --quiet config set container/cluster $GOOGLE_CLUSTER_NAME
-      # Reading the zone from the env var is not working so we set it here
-      - sudo /opt/google-cloud-sdk/bin/gcloud config set compute/zone ${GOOGLE_COMPUTE_ZONE}
-      - sudo /opt/google-cloud-sdk/bin/gcloud --quiet container clusters get-credentials $GOOGLE_CLUSTER_NAME
+
     environment:
       # Customize the JVM maximum heap limit
       JVM_OPTS: -Xmx3200m
@@ -99,6 +91,22 @@ jobs:
           command: sbt docker:publishLocal
       - run:
           command: sudo docker tag constellationlabs/constellation:$CIRCLE_SHA1 gcr.io/esoteric-helix-197319/constellationlabs/constellation:$CIRCLE_SHA1
+      - run:
+          command: sudo /opt/google-cloud-sdk/bin/gcloud --quiet components update
+      - run:
+          command: sudo /opt/google-cloud-sdk/bin/gcloud --quiet components update kubectl
+      - run:
+          command: echo $GCLOUD_SERVICE_KEY > ${HOME}/account-auth.json
+      - run:
+          command: sudo /opt/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file ${HOME}/account-auth.json
+      - run:
+          command: sudo /opt/google-cloud-sdk/bin/gcloud config set project $GOOGLE_PROJECT_ID
+      - run:
+          command: sudo /opt/google-cloud-sdk/bin/gcloud --quiet config set container/cluster $GOOGLE_CLUSTER_NAME
+      - run:
+          command: sudo /opt/google-cloud-sdk/bin/gcloud config set compute/zone ${GOOGLE_COMPUTE_ZONE}
+      - run:
+          command: sudo /opt/google-cloud-sdk/bin/gcloud --quiet container clusters get-credentials $GOOGLE_CLUSTER_NAME
       - run:
           command: sudo /opt/google-cloud-sdk/bin/gcloud docker -- push gcr.io/esoteric-helix-197319/constellationlabs/constellation:$CIRCLE_SHA1
 
