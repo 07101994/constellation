@@ -100,7 +100,7 @@ jobs:
       - run:
           command: sudo docker tag constellationlabs/constellation:$CIRCLE_SHA1 gcr.io/esoteric-helix-197319/constellationlabs/constellation:$CIRCLE_SHA1
       - run:
-          command: sudo /opt/google-cloud-sdk/bin/gcloud docker push gcr.io/esoteric-helix-197319/constellationlabs/constellation:$CIRCLE_SHA1
+          command: sudo /opt/google-cloud-sdk/bin/gcloud docker -- push gcr.io/esoteric-helix-197319/constellationlabs/constellation:$CIRCLE_SHA1
 
 workflows:
   version: 2
