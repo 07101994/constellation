@@ -49,6 +49,22 @@ jobs:
 
     working_directory: ~/constellation
 
+    general:
+      artifacts:
+        - target/universal
+
+    dependencies:
+      cache_directories:
+        - "~/.iv2/cache"
+        - "~/.sbt"
+        - "~/.m2"
+        - "target/resolution-cache"
+        - "target/streams"
+        - "project/target/resolution-cache"
+        - "project/target/streams"
+      override:
+        - sbt compile
+
     # For gcloud https://circleci.com/docs/1.0/google-cloud-platform/
     pre:
       - pyenv global 2.7.12
@@ -81,12 +97,16 @@ jobs:
 
       - run:
           command: sbt docker:publishLocal
+      - run:
+          command: sudo docker tag constellationlabs/constellation:$CIRCLE_SHA1 gcr.io/esoteric-helix-197319/constellationlabs/constellation:$CIRCLE_SHA1
+      - run:
+          command: sudo /opt/google-cloud-sdk/bin/gcloud docker push gcr.io/esoteric-helix-197319/constellationlabs/constellation:$CIRCLE_SHA1
 
 workflows:
   version: 2
-  build:
-    jobs:
-      - build
+ # build:
+ #   jobs:
+ #     - build
   publish:
     jobs:
   #    - build
