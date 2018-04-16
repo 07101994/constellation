@@ -54,7 +54,8 @@ jobs:
       JVM_OPTS: -Xmx3200m
       TERM: dumb
       IMAGE_REPO: constellationlabs
-      SHORT_GIT_HASH: $(echo $CIRCLE_SHA1 | cut -c -7)
+      # This doesn't work but its directly from their examples...?
+      #SHORT_GIT_HASH: $(echo $CIRCLE_SHA1 | cut -c -7)
 
     steps:
       - checkout

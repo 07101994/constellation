@@ -70,7 +70,7 @@ dockerCommands :=
 dockerUsername := Some("constellationlabs")
 
 dockerAlias := DockerAlias(None, Some("constellationlabs"), "constellation",
-  Some(sys.env.getOrElse("SHORT_GIT_HASH", version.toString))
+  Some(version.toString + "_" + sys.env.getOrElse("CIRCLE_SHA1", ""))
 )
 
 // Update the latest tag when publishing
