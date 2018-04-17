@@ -53,6 +53,7 @@ jobs:
       artifacts:
         - target/universal
 
+    # This doesn't appear to work...
     dependencies:
       cache_directories:
         - "~/.iv2/cache"
@@ -80,6 +81,7 @@ jobs:
     steps:
       - checkout
 
+      # This doesn't appear to work with sbt docker:publishLocal
       # Download and cache dependencies
       - restore_cache:
           keys:

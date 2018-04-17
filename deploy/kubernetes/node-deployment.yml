@@ -2,8 +2,8 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: node-service
-  name: node-service
+    app: node-service-cservicename
+  name: node-service-cservicename
 spec:
   ports:
   - port: 2551
@@ -14,22 +14,22 @@ spec:
     targetPort: 9000
   clusterIP: None
   selector:
-    app: constellation
+    app: constellation-cappname
 ---
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
-  name: constellation
+  name: constellation-cappname
 spec:
-  serviceName: node-service
+  serviceName: node-service-cservicename
   replicas: 3
   template:
     metadata:
       labels:
-        app: constellation
+        app: constellation-cservicename
     spec:
       containers:
-      - name: constellation
+      - name: constellation-cappname
         image: gcr.io/esoteric-helix-197319/constellationlabs/constellation:latest
         imagePullPolicy: Always
         ports:
