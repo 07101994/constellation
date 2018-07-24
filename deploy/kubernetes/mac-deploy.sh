@@ -13,8 +13,8 @@ sbt docker:publishLocal
 docker tag constellationlabs/constellation:latest $IMAGE
 gcloud docker -- push $IMAGE
 
-
-APP_USER="constellation-app-$USER-dev"
+USER_STR="$USER"
+APP_USER="constellation-app-$USER_STR"
 echo $APP_USER
 
 STRING=$(kubectl get sts $APP_USER 2>&1)
@@ -24,7 +24,7 @@ if [[ $STRING = *"Error"* ]]; then
     echo "No cluster found for $APP_USER - deploying new STS"
     cp ./deploy/kubernetes/node-deployment.yml ./deploy/kubernetes/node-deployment-impl.yml
     sed -i'.bak' "s/constellation-app/$APP_USER/g" ./deploy/kubernetes/node-deployment-impl.yml
-    sed -i'.bak' "s/node-service/node-service-$USER/g" ./deploy/kubernetes/node-deployment-impl.yml
+    sed -i'.bak' "s/node-service/node-service-$USER_STR/g" ./deploy/kubernetes/node-deployment-impl.yml
     sed -i'.bak' "s/constellation:latest/constellation:$IMAGE_TAG/g" ./deploy/kubernetes/node-deployment-impl.yml
     kubectl apply -f ./deploy/kubernetes/node-deployment-impl.yml
     # Re-enable rm later -- leave file around for debugging for now.
