@@ -17,6 +17,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.softwaremill.macmemo.memoize
 
+import scala.annotation.tailrec
 import scala.concurrent.duration._
 
 
@@ -202,6 +203,7 @@ trait BundleDataExt extends Reputation with MetricsExt with TransactionExt {
 
   def prettifyBundle(b: Bundle): String = b.pretty
 
+/*
   // UNSAFE
   def findAncestors(
                      parentHash: String,
@@ -222,24 +224,31 @@ trait BundleDataExt extends Reputation with MetricsExt with TransactionExt {
       )
     }
   }
+*/
 
   @memoize(1000, 600.seconds)
-  def findAncestorsUpToLastResolved(
+  private def findAncestorsUpToLastResolved(
                                      parentHash: String,
-                                     ancestors: Seq[Sheaf] = Seq()
+                                     ancestors: Seq[Sheaf] = Seq(),
+                                     upTo: Int = 150
                                    ): Seq[Sheaf] = {
     val parent = lookupBundle(parentHash)
-    def updatedAncestors = Seq(parent.get) ++ ancestors
+    def updatedAncestors: Seq[Sheaf] = parent.get +: ancestors
     if (parent.isEmpty) {
       if (parentHash != "coinbase") {
         syncPendingBundleHashes += parentHash
       }
       ancestors
-    } else if (parent.get.isResolved) updatedAncestors
+    }
+    else if (parent.get.isResolved) {
+      updatedAncestors
+    }
+    else if (ancestors.size >= upTo) updatedAncestors
     else {
       findAncestorsUpToLastResolved(
         parent.get.bundle.extractParentBundleHash.pbHash,
-        updatedAncestors
+        updatedAncestors,
+        upTo
       )
     }
   }

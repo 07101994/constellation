@@ -30,7 +30,7 @@ if [[ $STRING = *"Error"* ]]; then
     # Re-enable rm later -- leave file around for debugging for now.
     # rm ./deploy/kubernetes/node-deployment-impl.yml
 else
-    echo "Pre-existing cluster found for $USER, patching STS"
+    echo "Pre-existing cluster found for $USER_STR, patching STS"
     kubectl patch statefulset $APP_USER --type='json' -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value":"'$IMAGE'"}]'
 fi
 
