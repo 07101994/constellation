@@ -189,7 +189,7 @@ trait ProbabilisticGossip extends PeerAuth {
     val mb = maxBundle
     val pbh = getParentHashEmitter()
 
-    val maybeData = lookupBundle(pbh.pbHash)
+    val maybeData = lookupBundleDBFallbackBlocking(pbh.pbHash)
     val ids = maybeData.get.bundle.extractIds
     val lastPBWasSelf = maybeData.exists(_.bundle.bundleData.id == id)
     val selfIsFacilitator = (BigInt(pbh.pbHash, 16) % ids.size).toInt == 0
@@ -199,16 +199,16 @@ trait ProbabilisticGossip extends PeerAuth {
     if (!lastPBWasSelf || totalNumValidatedTX == 1) {
 
       // Emit an origin bundle. This needs to be managed by prob facil check on hash of previous + ids
-      val memPoolEmit = Random.nextInt() < 0.1
+      val memPoolEmit = Random.nextInt() < 0.05
       val filteredPool = memPool.diff(txInMaxBundleNotInValidation).filterNot(last10000ValidTXHash.contains)
-      val memPoolSelSize = Random.nextInt(5)
+      val memPoolSelSize = Random.nextInt(15) + 30
       val memPoolSelection = Random.shuffle(filteredPool.toSeq)
         .slice(0, memPoolSelSize + minGenesisDistrSize + 1)
 
 
       if (memPoolEmit && filteredPool.nonEmpty) {
         // println(s"Mempool emit on ${id.short}")
-
+        memPool = memPool.filterNot(memPoolSelection.contains)
         val b = Bundle(
           BundleData(
             memPoolSelection.map {
@@ -260,28 +260,36 @@ trait ProbabilisticGossip extends PeerAuth {
     // val groupedBundles = activeDAGBundles.groupBy(b => b.bundle.extractParentBundleHash -> b.bundle.maxStackDepth)
     var toRemove = Set[Sheaf]()
 
+    var doneEmit = false
+
     activeDAGManager.cellKeyToCell.filter{_._2.members.size > 1}.foreach{
       case (ck, cell) =>
-        val best = cell.members.slice(0, 2)
-        val allIds = best.flatMap{_.bundle.extractIds}.toSeq
-        if (!allIds.contains(id)) {
-          val b = Bundle(BundleData(best.map {
-            _.bundle
-          }.toSeq).signed())
-          val maybeData = lookupBundle(ck.hashPointer)
-          val pbData = maybeData.get
-          updateBundleFrom(pbData, Sheaf(b))
-          // Skip ids when depth below a certain amount, else tell everyone.
-          // TODO : Fix ^
-          // broadcast(b, skipIDs = allIds)
-          apiBroadcast(_.post("rxBundle", b), skipIDs = allIds) // .foreach{println}
-        } else {
-          toRemove ++= best.toSet
-        }
+        if (Random.nextDouble() > 0.2 && !doneEmit) {
+          val best = cell.members.slice(0, 2)
+          val allIds = best.flatMap {_.bundle.extractIds}.toSeq
+          if (!allIds.contains(id)) {
+            doneEmit = true
+            val b = Bundle(BundleData(best.map {_.bundle}.toSeq).signed())
+            val maybeData = lookupBundleDBFallbackBlocking(ck.hashPointer)
+            val pbData = maybeData.get
+            updateBundleFrom(pbData, Sheaf(b))
+            // Skip ids when depth below a certain amount, else tell everyone.
+            // TODO : Fix ^
+            broadcast(b, skipIDs = allIds)
+            toRemove ++= best.toSet
+            //apiBroadcast(_.post("rxBundle", b), skipIDs = allIds) // .foreach{println}
+          } else {
+            toRemove ++= best.toSet
+          }
 
-        if (cell.members.size > 10) {
-          val toRemoveHere = cell.members.toSeq.sortBy(z => z.totalScore.get).zipWithIndex.filter{_._2 < 5}.map{_._1}.toSet
-          toRemove ++= toRemoveHere
+          if (cell.members.size > 10) {
+            val toRemoveHere = cell.members.toSeq.sortBy(z => z.totalScore.get).zipWithIndex.filter {
+              _._2 < 5
+            }.map {
+              _._1
+            }.toSet
+            toRemove ++= toRemoveHere
+          }
         }
 
     }

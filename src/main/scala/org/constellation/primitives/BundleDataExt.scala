@@ -232,7 +232,7 @@ trait BundleDataExt extends Reputation with MetricsExt with TransactionExt {
                                      ancestors: Seq[Sheaf] = Seq(),
                                      upTo: Int = 150
                                    ): Seq[Sheaf] = {
-    val parent = lookupBundle(parentHash)
+    val parent = lookupBundleDBFallbackBlocking(parentHash)
     def updatedAncestors: Seq[Sheaf] = parent.get +: ancestors
     if (parent.isEmpty) {
       if (parentHash != "coinbase") {
